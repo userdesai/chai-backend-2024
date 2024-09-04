@@ -1,8 +1,9 @@
 import  asynchandler from '../utils/asynchandler.js'
 import { ApiError } from '../utils/ApiError.js';
 import { User } from '../models/user.models.js';
-import uploadCloudinary from '../utils/cloudinary.js';
+import {uploadCloudinary} from '../utils/cloudinary.js';
 import { ApiResponce } from '../utils/ApiResponse.js';
+
 
 export const registerUser=asynchandler(async(req,res)=>{
 //registation user
@@ -17,7 +18,7 @@ export const registerUser=asynchandler(async(req,res)=>{
     //9:- send res
 
 
-    const {usename,email,fullname,password}=req.body;
+    const {username,email,fullname,password,}=req.body;
     console.log("email",email);
 
     // if(usename === ""){
@@ -25,14 +26,14 @@ export const registerUser=asynchandler(async(req,res)=>{
     // }
 
     if(
-        [fullname,usename,email,password].some((fields)=>{fields?.trim()===""})
+        [fullname,username,email,password].some((fields)=>{fields?.trim()===""})
         
     ){
             throw new ApiError(400,"All fields are required")
     }
 
 
-    const existUser= User.findOne({$or:[{username},{email}]})
+    const existUser=await User.findOne({$or:[{username},{email}]})
     
     if(existUser){
         throw new ApiError(409,"User is already exists")
@@ -43,9 +44,12 @@ export const registerUser=asynchandler(async(req,res)=>{
 
     // req.files?.avatar[0]?.path checks if req.files exists, then checks if the avatar field exists, then checks if there's at least one file in the avatar array, and finally retrieves the path of that file.
     //?. is optional chainig they checks the value before null or undefined and returns undefined.
-    const avatarLocationPath= req.files?.avatar[0]?.path
-    const coverImageLocationPath=req.files?.coverImage[0]?.path
+    const avatarLocationPath= req.files?.avatar[0]?.path;
+    const coverImageLocationPath=req.files?.coverImage[0]?.path;
 
+    console.log("avatar is ",avatarLocationPath);
+    console.log("coverImage is ",coverImageLocationPath);
+    
     if(!avatarLocationPath){
         throw new ApiError(400,"Avatar is required")
     }
@@ -67,16 +71,18 @@ export const registerUser=asynchandler(async(req,res)=>{
     coverImage:coverImage?.url || "",
     email,
     password,
-    username:usename.toLowerCase()
+    username:username.toLowerCase()
  })
 
- const createdUser=User.findById(user._id).select(
+ const createdUser=await User.findById(user._id).select(
     "-password -refreshToken"
  )
 
- if(createdUser){
+ if(!createdUser){
     throw new ApiError(500,"Somthin went wrong while registration")
  }
+
+ console.log(createdUser)
 
  return res.status(201).json(
     new ApiResponce(200,createdUser,"User created successfully")
