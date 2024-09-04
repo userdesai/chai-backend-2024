@@ -41,8 +41,10 @@ export const registerUser=asynchandler(async(req,res)=>{
 
     //files handel
 
+    // req.files?.avatar[0]?.path checks if req.files exists, then checks if the avatar field exists, then checks if there's at least one file in the avatar array, and finally retrieves the path of that file.
+    //?. is optional chainig they checks the value before null or undefined and returns undefined.
     const avatarLocationPath= req.files?.avatar[0]?.path
-    const coverImageLocalPath=req.files?.coverImage[0]?.path
+    const coverImageLocationPath=req.files?.coverImage[0]?.path
 
     if(!avatarLocationPath){
         throw new ApiError(400,"Avatar is required")
@@ -51,7 +53,7 @@ export const registerUser=asynchandler(async(req,res)=>{
     //upload cloudinary image 
 
  const avatar=await uploadCloudinary(avatarLocationPath)
- const coverImage=await uploadCloudinary(coverImageLocalPath)
+ const coverImage=await uploadCloudinary(coverImageLocationPath)
 
   if(!avatar){
     throw new ApiError(400,"Avatar is required")
